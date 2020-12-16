@@ -1,6 +1,7 @@
 import pandas as pd
 pd.set_option('display.max_columns', 200) #set to show all columns
-pd.set_option('display.max_rows', 2000) 
+pd.set_option('display.max_rows', 2000)
+from glob import glob
 
 def county_week():
     counties_list = ['Alameda', 'Alpine', 'Amador', 'Butte', 'Calaveras', 'Colusa', 'Contra Costa', 'Del Norte', 
@@ -144,7 +145,206 @@ def ground_cover_data(gc_list, files):
     gc_data = pd.concat(year_dfs)
     return gc_data
                        
-                   
+def import_cimis(filenames):
+    '''
+    
+    Enters an alphabetically sorted list of filenames from CIMIS data source and returns a dictionary 
+    of county weather dataframes with only the useful columns for the project.
+    
+    '''
+    # Create an empty dictionary to read in new dataframes
+    wd = {}
+    # Iterate through list of csv files and read in the files to the dictionary
+    for x in range(0, len(filenames)):
+        wd[filenames[x]] = pd.read_csv(filenames[x])
+    # Create a list of California Counties to add to each dataframe due the files missing this data
+    weather_data_2_counties = ['Alameda','Amador','Butte','Colusa','Contra Costa','El Dorado','Fresno','Imperial',
+                               'Inyo','Kern','Kings','Lassen','Los Angeles','Marin','Merced','Modoc',
+                               'Monterey','Napa','Orange','Placer','Riverside','Sacramento','San Benito',
+                               'San Bernardino','San Diego','San Joaquin','San Luis Obispo','Santa Barbara',
+                               'Santa Clara','Santa Cruz','Shasta','Siskiyou','Solano','Sonoma','Stanislaus',
+                               'Sutter','Tehama','Tulare','Ventura','Yolo','Yuba']
+    # Create a list of columns that are unnecessary for the project
+    drop_columns = ['Stn Id', 'CIMIS Region', 'Jul', 'ETo (in)', 'Sol Rad (Ly/day)', 'Avg Vap Pres (mBars)', 
+                    'Wind Run (miles)', 'Avg Soil Temp (F)', 'qc', 'qc.1', 'qc.2', 'qc.3', 'qc.4', 'qc.5', 'qc.6', 
+                    'qc.7', 'qc.8', 'qc.9', 'qc.10', 'qc.11', 'qc.12', 'qc.13', 'Stn Name']
+    # Iterate through the dataframes in the dictionary
+    for x in range(0, len(filenames)):
+        # Drop unnecessary columns
+        wd[filenames[x]].drop(columns = drop_columns, axis = 1, inplace = True)
+        # Add county to dataframe
+        wd[filenames[x]]['county'] = weather_data_2_counties[x]
+        # Change date column from object to datetime object
+        wd[filenames[x]]['Date'] = pd.to_datetime(wd[filenames[x]]['Date'])
+        # Create a year column for ease of joining the dataframe to others
+        wd[filenames[x]]['year'] = pd.DatetimeIndex(wd[filenames[x]]['Date']).year
+        
+    return wd
+
+def import_scraped_weather(filenames):
+    '''
+    
+    Enters an alpabetically ordered list of filenames from scraped weather data from weather underground and
+    returns a dictionary of county weather dataframes with only the useful columns for the project
+    
+    '''
+    # Create an empty dictionary to read in new dataframes
+    wd = {}
+    # Iterate through list of csv files and read in the files to the dictionary
+    for x in range(0, len(filenames)):
+        wd[filenames[x]] = pd.read_csv(filenames[x])
+    # Create a list of California Counties to add to each dataframe due the files missing this data
+    weather_data_counties = ['Alpine', 'Calaveras', 'Del Norte', 'Glenn', 'Humboldt', 'Lake', 'Madera', 
+                             'Mariposa', 'Mendocino', 'Mono', 'Nevada', 'Plumas', 'San Francisco', 'San Mateo', 'Sierra', 
+                             'Trinity', 'Tuolumne']
+    # Create a list of columns that are unnecessary for the project
+    drop_columns = ['Unnamed: 0', 'Max Dew Point (F)', 'Min Dew Point (F)', 'Max Wind Speed (mph)', 
+                    'Min Wind Speed (mph)', 'Max Pressure (Hg)', 'Avg Pressure (Hg)', 'Min Pressure (Hg)']
+    #Iterate through the dataframes in the dictionary
+    for x in range(0, len(filenames)):
+        # Drop unnecessary columns
+        wd[filenames[x]].drop(columns = drop_columns, axis = 1, inplace = True)
+        # Add county to dataframe
+        wd[filenames[x]]['county'] = weather_data_counties[x]
+        # Rename column to match cimis data
+        wd[filenames[x]].rename(columns = {'Avg Dew Point (F)':'Dew Point (F)'}, inplace = True)
+        # Change numeral values in Date column to datetime range of values
+        wd[filenames[x]]['Date'] = pd.date_range('2012-12-01', '2019-12-31', freq = 'D')
+        wd[filenames[x]]['year'] = pd.DatetimeIndex(wd[filenames[x]]['Date']).year
+    
+    return wd
+                       
+def prev_week_weather(data, filenames, counties):
+    '''
+    
+    Enters a dictionary of daily weather data and returns a dictionary of the previous weeks weather averages
+    
+    '''
+    prev_week_data = {}
+    # Iterate through the dictionary of county daily weather data
+    for x in range(0, len(filenames)):
+        # Create a new dataframe of the current data
+        weather = data[filenames[x]]
+        # Set date as the index for future resampling
+        weather.set_index('Date', inplace=True)
+        # resample the weather data on a weekly basis
+        weather = weather.resample('W')
+        # Take the mean of the data columns
+        weather_mean = weather.mean()
+        # Add suffix to to column names
+        weather_mean = weather_mean.add_suffix('_Weekly')
+        # Reassign the county name that was lost in resampling
+        weather_mean['county'] = counties[x]
+        # Shift the data one week foward so each row will have previous week's weather means
+        weather_mean = weather_mean.shift(1)
+        # Reset the year column to the year in the index
+        weather_mean['year'] = weather_mean.index.year
+        # Reset the index
+        weather_mean = weather_mean.reset_index()
+        # Slice the data for only the timeframe used in the project
+        weather_week = weather_mean.loc[(weather_mean['Date'] > '2012-12-31') & (weather_mean['Date'] < '2019-01-01')]
+        # reassign the new dataframe to the dictionary
+        prev_week_data[filenames[x]] = weather_week
+        
+    # Return the new dictionary
+    return prev_week_data
+                       
+def prev_month_weather(data, filenames, counties):
+    '''
+    
+    Enters a dictionary of daily weather data and returns a dictionary of the previous month's weather averages
+    
+    '''
+    prev_month_data = {}
+    # Iterate through the dictionary of county daily weather
+    for n in range(0, len(filenames)):
+        # Create a new dataframe of the current data
+        weather = data[filenames[n]]
+        # Resample by day in case of multiple stations
+        weather = weather.resample('D').mean()
+        # Create a new dataframe for the monthly averages
+        month_agg = pd.DataFrame()
+        # Create a date series for the range of the project
+        month_agg['Date'] = pd.date_range('2013-01-01', '2019-12-31', freq = 'W')
+        # Create lists for columns
+        a = []
+        b = []
+        c = []
+        d = []
+        e = []
+        f = []
+        g = []
+        h = []
+        i = []
+        # Create a list of lists to iterate through
+        col_list = [a, b, c, d, e, f, g, h, i]
+        # Iterate through each date
+        for x in month_agg.Date:
+            # Iterate through each column
+            for y in range(0, len(col_list)):
+                # Take the mean of the column type from the 4 weeks before the date
+                col_list[y].append(weather.loc[x - pd.Timedelta(weeks = 4) : x][weather.columns[y]].mean())
+        # Add each list as a series to the final dataset
+        for z in range(0, len(col_list)):
+            month_agg[weather.columns[z]] = col_list[z]
+        # Reassign the county name that was lost in resampling
+        month_agg['county'] = counties[n]
+        # Grab only the dates within 2013-2018
+        prev_month = month_agg.loc[(month_agg['Date'] > '2012-12-31') & (month_agg['Date'] < '2019-01-01')]
+        # Add the dataframe to a dictionary of previous month averages
+        prev_month_data[filenames[n]] = prev_month
+    # Return the new dictionary
+    return prev_month_data
+                       
+def cimis_data():
+    # Find all cimis weather files
+    cimis_files = glob('data/weather_cimis/*.csv')
+    # Sort files into alphabetical order
+    cimis_files.sort()
+    # Import csv files into pandas dataframes
+    cimis_data = import_cimis(cimis_files)
+    # Create a list of cimis counties
+    cimis_counties = ['Alameda','Amador','Butte','Colusa','Contra Costa','El Dorado','Fresno','Imperial',
+                    'Inyo','Kern','Kings','Lassen','Los Angeles','Marin', 'Merced','Modoc',
+                    'Monterey','Napa','Orange','Placer','Riverside','Sacramento','San Benito',
+                    'San Bernardino','San Diego','San Joaquin','San Luis Obispo','Santa Barbara',
+                    'Santa Clara','Santa Cruz','Shasta','Siskiyou','Solano','Sonoma','Stanislaus',
+                    'Sutter','Tehama','Tulare','Ventura','Yolo','Yuba']
+    # Aggregate weekly cimis data
+    pww_cimis = prev_week_weather(weather_cimis, files, cimis_counties)
+    # Aggregate monthly cimis data
+    pmw_cimis = prev_month_weather(weather_cimis, files, cimis_counties)
+    # Return weekly and monthly cimis data
+    return pww_cimis, pmw_cimis
+                       
+def wu_data():
+    # Find all weather underground files
+    wu_files = glob('data/weather_mc/*.csv')
+    # Sort files into alphabetical order
+    wu_files.sort()
+    # Import csv files into pandas dataframes
+    wu_data = import_scraped_weather(wu_files)
+    # Two of the files still have an extra index column. Drop the extra index columns
+    wu_data[wu_files[2]].drop(columns = 'index', inplace = True)
+    wu_data[wu_files[-2]].drop(columns = 'index', inplace = True)
+    # Reset the index for the two files
+    wu_data[wu_files[2]].reset_index(drop = True)
+    wu_data[wu_files[-2]].reset_index(drop = True)
+    # Create a list of weather underground counties
+    wu_counties = ['Alpine', 'Calaveras', 'Del Norte', 'Glenn', 'Humboldt', 'Lake', 'Madera', 
+                 'Mariposa', 'Mendocino', 'Mono', 'Nevada', 'Plumas', 'San Francisco', 'San Mateo', 'Sierra', 
+                 'Trinity', 'Tuolumne']
+    # Aggregate weekly weather underground data
+    pww_wu = prev_week_weather(wu_data, wu_files, wu_counties)
+    # Aggregate monthly weather underground data
+    pmw_wu = prev_month_weather(wu_data, wu_files, wu_counties)
+    # Return weekly and monthly weather underground data
+    return pww_wu, pmw_wu
+           
+
+
+                       
+                       
                    
                    
                    
