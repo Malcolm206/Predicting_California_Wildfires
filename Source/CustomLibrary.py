@@ -341,9 +341,52 @@ def wu_data():
     # Return weekly and monthly weather underground data
     return pww_wu, pmw_wu
            
-
-
+def weekly_data(cimis, wu, cimis_files, wu_files):
+    # create a new dataframe for weekly data
+    pw_weather = pd.DataFrame()
+    # iterate through each cimis county weather dataframe
+    for x in range(0, len(cimis)):
+        # add each cimis county weather dataframe to pw_weather
+        pw_weather = pw_weather.append(cimis[cimis_filesfiles[x]])
+    # Iterate through each weather underground dataframe
+    for y in range(0, len(wu)):
+        # add each weather undergound dataframe to pw_weather
+        pw_weather = pw_weather.append(wu[wu_files[y]])
+    # Drop unnecessary columns
+    pw_weather.drop(['year', 'year_Weekly'], axis = 1, inplace = True)
+    # Rename the Date column as date for ease of merging with other dataframes
+    pw_weather = pw_weather.rename(columns = {'Date': 'date'})
+    # Return Past Week's Dataframe
+    return pw_weather
                        
+def monthly_data(cimis, wu, cimis_files, wu_files):
+    # create a new dataframe for monthly data
+    pm_weather = pd.DataFrame()
+    # iterate through each cimis county weather dataframe
+    for x in range(0, len(cimis)):
+        # add each cimis county weather dataframe to pm_weather
+        pm_weather = pm_weather.append(cimis[cimis_filesfiles[x]])
+    # Iterate through each weather underground dataframe
+    for y in range(0, len(wu)):
+        # add each weather undergound dataframe to pm_weather
+        pm_weather = pm_weather.append(wu[wu_files[y]])
+    # Add month suffix to column names
+    pm_weather = pm_weather.add_suffix('_month')
+    # Change back date and county to original for ease of merging with other dataframes
+    pm_weather = pm_weather.rename(columns = {'Date_month': 'date', 'county_month': 'county'})
+    # Return Past Week's Dataframe
+    return pm_weather
+
+def year_example(df):
+    # Slice only a year of data
+    year_ex = df.loc[df['date'] < '2014-01-01']
+    # Change column date from object to datetime
+    year_ex['date'] = pd.to_datetime(year_ex['date'])
+    # Resample data on a monthly frequency and take the sum
+    year_ex = year_ex.resample('M', on = 'date').sum()
+    # Reset the index
+    year_ex = year_ex.reset_index()
+    return year_ex
                        
                    
                    
