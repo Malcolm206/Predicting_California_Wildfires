@@ -51,31 +51,31 @@ For each of the features, the previous week's and previous month's averages were
 
 We first check to see the number of weeks that have wildfires started and those that don't.
 
-image
+![class_imbalance](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/class_imbalance.png)
 
 As expected, there is a large class imbalance between the number of weeks that have a wildfire starting and the weeks that don't.
 
 Next we checked the number wildfires through the year. We use only one year to get a clearer idea of possible high points.
 
-image
+![year_ex](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/year_ex.png)
 
 There are more wildfires starting in the summer months than the rest of the year. This makes sense as the summer months are drier and with less rain.
 
 We create a month feature to take a closer look at the number of wildfires started based on month.
 
-image
+![wildfires_month](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/wildfires_month.png)
 
 As seen in the year 2013, over the course of 2013-2018 the majority of wildfires start in the summer months. July is the month that has the most wildfires started.
 
 Next we check if there are certain years that have more wildfires than others.
 
-image
+![wildfires_year](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/wildfires_years.png)
 
 After the decrease after 2013, there seems to be an increasing trend of wildfires that Calfire managed the containment of.
 
 There are certain counties that are more likely to have more wildfires than others. The county of Riverside has had the highest number of wilfires started.
 
-image
+![wilfires_county](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/wilfires_county.png)
 
 ## Model Evaluation
 
@@ -83,11 +83,11 @@ We tried several model: a logistic regression model, a K Nearest Neighbor (KNN) 
 
 The best model is the logistic regression. While all the models had very close recall scores, the logistic regression model was slightly higher with a score of ~80%.
 
-image
+![recall_viz](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/recall_score_model.png)
 
 From the confusion matrix, we can see that while the number of false negatives was smaller, the number of false positives was very large.
 
-image
+![confusion_matrix](https://github.com/Malcolm206/Predicting_California_Wildfires/blob/main/Images/confmatrix.png)
 
 
 ## Conclusion
@@ -106,9 +106,9 @@ Further study could model the probability of fire sizes using the number of acre
 
 ## Sources
 
-[California Land Use and Ownership Portal by the University of California](https://callands.ucanr.edu/data.html#)
-[California Irrigation Management Information System (CIMIS)](https://cimis.water.ca.gov/)
-[Weather Underground](https://www.wunderground.com/)
-[Kaggle California Wildfire Incidents](https://www.kaggle.com/ananthu017/california-wildfire-incidents-20132020)
-[CalFire](https://www.fire.ca.gov/)
-[Anyplace America](https://www.anyplaceamerica.com/directory/ca/)
+[California Land Use and Ownership Portal by the University of California](https://callands.ucanr.edu/data.html#) <br>
+[California Irrigation Management Information System (CIMIS)](https://cimis.water.ca.gov/) <br>
+[Weather Underground](https://www.wunderground.com/)<br>
+[Kaggle California Wildfire Incidents](https://www.kaggle.com/ananthu017/california-wildfire-incidents-20132020) <br>
+[CalFire](https://www.fire.ca.gov/)<br>
+[Anyplace America](https://www.anyplaceamerica.com/directory/ca/)<br>
