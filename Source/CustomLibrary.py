@@ -2,8 +2,16 @@ import pandas as pd
 pd.set_option('display.max_columns', 200) #set to show all columns
 pd.set_option('display.max_rows', 2000)
 from glob import glob
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import f1_score, accuracy_score, recall_score, confusion_matrix
 
 def county_week():
+    '''
+    
+    Creates a dataframe of weeks in the years 2013-2018 for each California county
+    
+    '''
     counties_list = ['Alameda', 'Alpine', 'Amador', 'Butte', 'Calaveras', 'Colusa', 'Contra Costa', 'Del Norte', 
                  'El Dorado', 'Fresno', 'Glenn', 'Humboldt', 'Imperial', 'Inyo', 'Kern','Kings', 'Lake', 
                  'Lassen', 'Los Angeles', 'Madera', 'Marin', 'Mariposa', 'Mendocino', 'Merced', 'Modoc', 'Mono',
@@ -22,10 +30,16 @@ def county_week():
     date_counties_w['date'] = date_w
     date_counties_w['county'] = county_w
     date_counties_w = date_counties_w.reset_index(drop = True)
+    date_counties_w['year'] = pd.DatetimeIndex(date_counties_w['date']).year
     
     return date_counties_w
 
 def county_fire(df):
+    '''
+    
+    From the inputed dataframe (Calfire Wildfire Incidents) and returns a list of county dataframes with target variable on weekly observations
+    
+    '''
     counties_list = ['Alameda', 'Alpine', 'Amador', 'Butte', 'Calaveras', 'Colusa', 'Contra Costa', 'Del Norte', 
              'El Dorado', 'Fresno', 'Glenn', 'Humboldt', 'Imperial', 'Inyo', 'Kern','Kings', 'Lake', 
              'Lassen', 'Los Angeles', 'Madera', 'Marin', 'Mariposa', 'Mendocino', 'Merced', 'Modoc', 'Mono',
@@ -34,10 +48,17 @@ def county_fire(df):
              'San Mateo', 'Santa Barbara', 'Santa Clara', 'Santa Cruz', 'Shasta', 'Sierra', 'Siskiyou', 
              'Solano', 'Sonoma', 'Stanislaus', 'Sutter', 'Tehama', 'Trinity', 'Tulare', 'Tuolumne', 
              'Ventura', 'Yolo', 'Yuba']
-    df_dt = df.loc[df['Started'] < '2019-01-01']
+    df_s = df[['AcresBurned', 'Counties', 'Extinguished', 'Started']]
+    df_s['Extinguished'] = pd.to_datetime(df_s['Extinguished'])
+    df_s['Started'] = pd.to_datetime(df_s['Started'])
+    df_s['Extinguished'] = df_s['Extinguished'].dt.date
+    df_s['Started'] = df_s['Started'].dt.date
+    df_s['Extinguished'] = pd.to_datetime(df_s['Extinguished'])
+    df_s['Started'] = pd.to_datetime(df_s['Started'])
+    df_dt = df_s.loc[df_s['Started'] < '2019-01-01']
     county_df = []
     for x in counties_list:
-        cdf = df_dt.loc[kag_df_dt['Counties'] == x]
+        cdf = df_dt.loc[df_dt['Counties'] == x]
         cdf = cdf.resample('W', on = 'Started').mean()
         cdf.dropna(inplace = True)
         cdf = cdf.reset_index()
@@ -46,13 +67,23 @@ def county_fire(df):
     return county_df
 
 def fire_started(df):
+    '''
+    
+    From a list of dataframes (county_fire function return), merges into one dataframe and sets the target variable as binary
+    
+    '''
     fire_started = pd.concat(df)
     fire_started['fire_started'] = 1
-    fire_started.drop(columns = ['Counties', 'Extinguished', 'burn_time', 'index'], inplace = True)
+    fire_started.drop(columns = ['Counties', 'Extinguished', 'index'], inplace = True)
     fire_started.columns = ['acres_burned', 'date', 'county', 'fire_started']
     return fire_started
 
 def ground_cover_table(dictionary, files):
+    '''
+    
+    From a dictionary of county Summary Land Use Statistics dataframes, returns dataframe where each row is county observation with land cover acres, land cover percentage of county, and elevation of county.
+    
+    '''
     counties_list = ['Alameda', 'Alpine', 'Amador', 'Butte', 'Calaveras', 'Colusa', 'Contra Costa', 'Del Norte', 
                      'El Dorado', 'Fresno', 'Glenn', 'Humboldt', 'Imperial', 'Inyo', 'Kern','Kings', 'Lake', 
                      'Lassen', 'Los Angeles', 'Madera', 'Marin', 'Mariposa', 'Mendocino', 'Merced', 'Modoc', 'Mono',
@@ -95,6 +126,11 @@ def ground_cover_table(dictionary, files):
     return ground_cover
 
 def file_names():
+    '''
+    
+    Finds file names for ground cover from each year, and returns a list with lists of ground cover for each year
+    
+    '''
     # find the files names for the ground cover each year. Then sort the files in alphabetical order
     files_2013 = glob('data/ground_cover_2013/*.csv')
     files_2013.sort()
@@ -113,10 +149,15 @@ def file_names():
     return files
 
 def import_ground_cover(files):
+    '''
+    
+    Imports csv files and returns a list of dictionaries with ground cover dataframes (a dictionary per year).
+    
+    '''
     # Create an empty list for the dictionaries
     gc_list = []
     # Iterate over the each file year list
-    for x in range(0, len(files):
+    for x in range(0, len(files)):
         # create an empty dictionary for each county dataframe
         d = {}
         # Iterate over the list of counties
@@ -130,18 +171,21 @@ def import_ground_cover(files):
 
 
 def ground_cover_data(gc_list, files):
+    '''
+    
+    Takes a list of dictionaries and returns one dataframe with county ground cover from each year
+    
+    '''
     # Create a list of years
     years = [2013, 2014, 2015, 2016, 2017, 2018]
     # Create a list of year dataframes
     year_dfs = []
     # iterate over the list of year dictionaries
-    for x in range(0, len(gc_list):
-        # iterate over each dataframe in the year dictionary
-        for y in range(0, len(gc_list[x])
-            # Use ground_cover_table function to restructure the dataframes into a year dataframe 
-            gc_year = ground_cover_table(gc_list[x], files[x][y])
-            gc_year['year'] = years[x]
-            year_dfs.append(gc_year)
+    for x in range(0, len(gc_list)):
+        # Use ground_cover_table function to restructure the dataframes into a year dataframe 
+        gc_year = ground_cover_table(gc_list[x], files[x])
+        gc_year['year'] = years[x]
+        year_dfs.append(gc_year)
     gc_data = pd.concat(year_dfs)
     return gc_data
                        
@@ -297,6 +341,11 @@ def prev_month_weather(data, filenames, counties):
     return prev_month_data
                        
 def cimis_data():
+    '''
+    
+    Imports cimis weather data and returns past week and month averages and cimis files names
+    
+    '''
     # Find all cimis weather files
     cimis_files = glob('data/weather_cimis/*.csv')
     # Sort files into alphabetical order
@@ -311,13 +360,18 @@ def cimis_data():
                     'Santa Clara','Santa Cruz','Shasta','Siskiyou','Solano','Sonoma','Stanislaus',
                     'Sutter','Tehama','Tulare','Ventura','Yolo','Yuba']
     # Aggregate weekly cimis data
-    pww_cimis = prev_week_weather(weather_cimis, files, cimis_counties)
+    pww_cimis = prev_week_weather(cimis_data, cimis_files, cimis_counties)
     # Aggregate monthly cimis data
-    pmw_cimis = prev_month_weather(weather_cimis, files, cimis_counties)
+    pmw_cimis = prev_month_weather(cimis_data, cimis_files, cimis_counties)
     # Return weekly and monthly cimis data
-    return pww_cimis, pmw_cimis
+    return pww_cimis, pmw_cimis, cimis_files
                        
 def wu_data():
+    '''
+    
+    Imports weather underground data and returns past week and month averages and weather underground files names
+    
+    '''
     # Find all weather underground files
     wu_files = glob('data/weather_mc/*.csv')
     # Sort files into alphabetical order
@@ -339,15 +393,20 @@ def wu_data():
     # Aggregate monthly weather underground data
     pmw_wu = prev_month_weather(wu_data, wu_files, wu_counties)
     # Return weekly and monthly weather underground data
-    return pww_wu, pmw_wu
+    return pww_wu, pmw_wu, wu_files
            
 def weekly_data(cimis, wu, cimis_files, wu_files):
+    '''
+    
+    Takes in dictionaries and returns a dataframe with all past week weather data
+    
+    '''
     # create a new dataframe for weekly data
     pw_weather = pd.DataFrame()
     # iterate through each cimis county weather dataframe
     for x in range(0, len(cimis)):
         # add each cimis county weather dataframe to pw_weather
-        pw_weather = pw_weather.append(cimis[cimis_filesfiles[x]])
+        pw_weather = pw_weather.append(cimis[cimis_files[x]])
     # Iterate through each weather underground dataframe
     for y in range(0, len(wu)):
         # add each weather undergound dataframe to pw_weather
@@ -360,12 +419,17 @@ def weekly_data(cimis, wu, cimis_files, wu_files):
     return pw_weather
                        
 def monthly_data(cimis, wu, cimis_files, wu_files):
+    '''
+    
+    Takes in dictionaries and returns a dataframe with all past month weather data
+    
+    '''
     # create a new dataframe for monthly data
     pm_weather = pd.DataFrame()
     # iterate through each cimis county weather dataframe
     for x in range(0, len(cimis)):
         # add each cimis county weather dataframe to pm_weather
-        pm_weather = pm_weather.append(cimis[cimis_filesfiles[x]])
+        pm_weather = pm_weather.append(cimis[cimis_files[x]])
     # Iterate through each weather underground dataframe
     for y in range(0, len(wu)):
         # add each weather undergound dataframe to pm_weather
@@ -378,6 +442,11 @@ def monthly_data(cimis, wu, cimis_files, wu_files):
     return pm_weather
 
 def year_example(df):
+    '''
+    
+    Creates a new dataframe from a year slice from the given dataframe
+    
+    '''
     # Slice only a year of data
     year_ex = df.loc[df['date'] < '2014-01-01']
     # Change column date from object to datetime
@@ -388,7 +457,63 @@ def year_example(df):
     year_ex = year_ex.reset_index()
     return year_ex
                        
+def dummy_variables(df):
+    '''
+    
+    Creates dummy variables for dataframe (specific to this project)
+    
+    '''
+    # Create dummy variables for the county column
+    counties = pd.get_dummies(df.county, drop_first = True)
+    # Drop county column along with unnecessary columns (year and acres burned)
+    df2 = df.drop(columns = ['county', 'year', 'acres_burned'], axis = 1)
+    # Feature engineer month column from the date column
+    df2['month'] = pd.DatetimeIndex(df2['date']).month
+    # Drop the date column
+    df2.drop(columns = ['date'], axis = 1, inplace = True)
+    # Create dummy variables for the months
+    month = pd.get_dummies(df2.month, drop_first = True)
+    # Drop the month column
+    df2.drop(columns = 'month', axis =1, inplace = True)
+    # Combine the original dataframe with the dummy variables
+    df2 = pd.concat([df2, counties, month], axis = 1)
+    # Return the new dataframe
+    return df2
                    
-                   
-                   
-                   
+def model_recall_scores_viz(score1, score2, score3, score4):
+    yplot = sorted([score1, score2, score3, score4], reverse=True)
+    xplot = [0, 1, 2, 3]
+    x_label = ["Logistic Regression", "KNN", "Random Forest", "Decision Tree"]
+
+    sns.set_palette("rocket")
+    fig, ax = plt.subplots()
+
+    sns.barplot(x = xplot,y = yplot, ax=ax, alpha=0.9, label=x_label)
+    plt.xticks(xplot, x_label, rotation=60)
+    plt.ylabel("Recall Score")
+
+    for x_pos, y_pos in zip(xplot,yplot):
+        ax.text(x_pos-0.1, y_pos - 0.1, str(round(y_pos,3)), color="white")
+
+    plt.title("Recall Scores by Model", size=14)
+    fig.tight_layout()
+    plt.savefig("Images/recall_score_model.png")
+    return plt.show()
+
+
+def confusion_matrix_viz(test, predict):
+    fig, ax = plt.subplots()
+    sns.heatmap(confusion_matrix(test, predict),
+                annot = True,
+                ax = ax,
+                fmt = 'd')
+    ax.set_ylim([0,2])
+    ax.set_yticks([0.75, 1.75])
+    ax.set_title('Confusion Matrix')
+    ax.set_xlabel('Predicted')
+    ax.set_ylabel('True')
+    ax.yaxis.set_ticklabels(['No Wildfire', 'Wildfire'])
+    ax.xaxis.set_ticklabels(['No Wildfire', 'Wildfire'])
+    fig.savefig('images/confmatrix.png', bbox_inches='tight')
+
+

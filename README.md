@@ -1,4 +1,21 @@
 # Predicting California Wildfires
+**Authors** <br>
+[Malcolm Katzenbach](https://github.com/malcolm206)<br>
+
+![forest_fire](https://unsplash.com/photos/nVYEechGqqM)
+
+## Repository Structure
+
+```
+├── data                                <- Gathered externally
+├── Images                              <- Generated from code
+├── Models                              <- pickled models
+├── Notebooks                           <- All modeling, data collection, data prep, and EDA notebooks
+├── Source                              <- Custom Library .py file with functions
+├── California_Wildfires.ipynb          <- Final Notebook
+├── presentation.pdf                    <- Slide Deck
+└── README.md                           <- The high-level overview of this project
+```
 
 ## Overview
 
@@ -30,3 +47,68 @@ The Weather Data was gathered from the California Irrigation Management Informat
 
 For each of the features, the previous week's and previous month's averages were created for the final data set.
 
+## Exploratory Data Analysis
+
+We first check to see the number of weeks that have wildfires started and those that don't.
+
+image
+
+As expected, there is a large class imbalance between the number of weeks that have a wildfire starting and the weeks that don't.
+
+Next we checked the number wildfires through the year. We use only one year to get a clearer idea of possible high points.
+
+image
+
+There are more wildfires starting in the summer months than the rest of the year. This makes sense as the summer months are drier and with less rain.
+
+We create a month feature to take a closer look at the number of wildfires started based on month.
+
+image
+
+As seen in the year 2013, over the course of 2013-2018 the majority of wildfires start in the summer months. July is the month that has the most wildfires started.
+
+Next we check if there are certain years that have more wildfires than others.
+
+image
+
+After the decrease after 2013, there seems to be an increasing trend of wildfires that Calfire managed the containment of.
+
+There are certain counties that are more likely to have more wildfires than others. The county of Riverside has had the highest number of wilfires started.
+
+image
+
+## Model Evaluation
+
+We tried several model: a logistic regression model, a K Nearest Neighbor (KNN) model, a Decision Tree classifier, and a Random Forest Classifier. To validate the models, we used cross validation using `cross_val_scores` with the logistic regression model and the knn model. The Decision Tree classifier and the Random Forest classifier had parameters tuned and validated using GridSearchCV.
+
+The best model is the logistic regression. While all the models had very close recall scores, the logistic regression model was slightly higher with a score of ~80%.
+
+image
+
+From the confusion matrix, we can see that while the number of false negatives was smaller, the number of false positives was very large.
+
+image
+
+
+## Conclusion
+
+With a recall score of nearly 80%, it means that this model should not be used on its own. While the model does well at catching which observations will result in wildfires, the model should ideally have a higher score. A possible reason for the false negatives could be from missing connections. A large number of wildfires are caused by humans, which is something that is unaccounted for in this model. The large number of false positives could be from missing connections or it might be due to the nature of CalFire Wildfire Incidents only record wildfires that burn more than 10 acres. A portion of the false positives could be from wildfires that burned close to 10 acres but did not reach the cutoff.
+
+## Future Steps
+
+Possible future improvements to this project are: 
+
+    - More feature engineering
+    - Gathering human relevant data such as population or population density
+    - New models such as XG Boost and Neural Nets
+    
+Further study could model the probability of fire sizes using the number of acres burned.
+
+## Sources
+
+[California Land Use and Ownership Portal by the University of California](https://callands.ucanr.edu/data.html#)
+[California Irrigation Management Information System (CIMIS)](https://cimis.water.ca.gov/)
+[Weather Underground](https://www.wunderground.com/)
+[Kaggle California Wildfire Incidents](https://www.kaggle.com/ananthu017/california-wildfire-incidents-20132020)
+[CalFire](https://www.fire.ca.gov/)
+[Anyplace America](https://www.anyplaceamerica.com/directory/ca/)
