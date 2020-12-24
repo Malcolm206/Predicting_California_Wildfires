@@ -23,17 +23,23 @@ This project's aim is to build a classification model that will predict if there
 
 ## Business Problem
 
-As of early December, there have been more than 9,500 wildfires that have burned more than 4 million acres of California land. California has about 100 million acres, so nearly 4% of California's land has burned from wildfires in the year 2020. This makes 2020 the most destructive year of wildfires recorded in California. Right now the government group CalFire has a Red Flag and Fire Watch Warning system which is issued during forecasted weather events 24-72 hours in advance, which may result in wildfire behavior. The model in this project would predict the probabilities of a wildfire occuring in a county of California during a specific week based on the three main factors that affect wildfire behavior: weather, topography, and fuels. CalFire could use this model in addition to their warning system to better allocate funds and personnel to counties in more danger of wildfire incidents, and thus better control the spread of wildfires that do start.
+As of early December, there have been more than 9,500 wildfires that have burned more than 4 million acres of California land. California has about 100 million acres, so nearly 4% of California's land has burned from wildfires in the year 2020. This makes 2020 the most destructive year of wildfires recorded in California. Right now the government group CalFire has a Red Flag and Fire Watch Warning system from the National Weather Service, which is issued during forecasted weather events 24-72 hours in advance, which may result in wildfire behavior.
+
+There are two types of warnings: a Red Flag Warning and Fire Weather Watches. "A Red Flag Warning is issued for weather events which may result in extreme fire behavior that will occur within 24 hours. A Fire Weather Watch is issued when weather conditions could exist in the next 12-72 hours." Both types of warnings look at weather patterns based on a combinations factors such as low humidity, high wind speeds, dry fuel conditions due to low percipitation and chances of lightning strikes.
+
+The model in this project would predict if a wildfire will occur in a county of California during a specific week based on the three main factors that affect wildfire behavior: weather, topography, and fuels. By running this model at the beginning of each week, CalFire could use the prediction to determine which counties are in most danger of wildfires that week and allocate both funds and personnel to in danger counties. From there, CalFire using the original warning system can prepare there personnel for the days that are most dangerous. This could allow CalFire and associated groups to better prepare and contain wildfires that do occur.
+
+Another possible benefit would be for alerts to the public of weeks that people should be prepared for possible wildfires, so that they can be prepared for possible evacuations.
 
 ## Data Understanding
 
 The data set used in the modeling is gathered from muliple sources. The original wildfire data comes from a Kaggle data set that had over 1600 different incidents between 2013 and 2020 that the government group CalFire managed the containment of. From this data set, the `acres_burned`, `county`, and `Start` date were used in the final data set. From the `Start` and `county` columns we regrouped the data based on a weekly basis per county and `acres_burned` gave our target variable if there was an indicent in that county and week or not. To help predict the probability of wildfire, we used the features that affect wildfire behavior: Fuel, Topography, and Weather.
 
-The Fuel data was gathered from the California Land Use and Ownership Portal by the University of California. Between the years of 2013-2018, each county has a Summary Land Use Statistics csv file for each year. There are 26 different types of land cover, like agriculture use, type of forest, or even barren. All these different files were combined into one dataset that that had number of acres and percentage of county land for each tyoe of landcover. 
+The Fuel data was gathered from the [California Land Use and Ownership Portal](https://callands.ucanr.edu/data.html#) by the University of California. Between the years of 2013-2018, each county has a Summary Land Use Statistics csv file for each year. There are 26 different types of land cover, like agriculture use, type of forest, or even barren. All these different files were combined into one dataset that that had number of acres and percentage of county land for each type of landcover. 
 
-The Topography data used the min and max elevations of the counties from the Anyplace America topographic maps.
+The Topography data used the min and max elevations of the counties from the [Anyplace America](https://www.anyplaceamerica.com/directory/ca/) topographic maps.
 
-The Weather Data was gathered from the California Irrigation Management Information System (CIMIS) by the California Department of Water Resources and from the Weather Underground Website. The daily measurements for the following features were grabbed:
+The Weather Data was gathered from the California Irrigation Management Information System ([CIMIS](https://cimis.water.ca.gov/)) by the California Department of Water Resources and from the [Weather Underground](https://www.wunderground.com/) Website. The daily measurements for the following features were grabbed:
 
 - `Avg Air Temp (F)`
 - `Max Air Temp (F)`
