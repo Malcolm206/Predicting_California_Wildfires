@@ -480,40 +480,66 @@ def dummy_variables(df):
     # Return the new dataframe
     return df2
                    
-def model_recall_scores_viz(score1, score2, score3, score4):
-    yplot = sorted([score1, score2, score3, score4], reverse=True)
-    xplot = [0, 1, 2, 3]
-    x_label = ["Logistic Regression", "KNN", "Random Forest", "Decision Tree"]
+def model_recall_scores_viz(score1, score2, score3, score4, score5, score6, score7):
+    yplot = sorted([score1, score2, score3, score4, score5, score6, score7], reverse=True)
+    xplot = [0, 1, 2, 3, 4, 5, 6]
+    x_label = ["Logistic Regression", "Adaboost", "XGBoost", "GradientBoosting", "Random Forest", "Decision Tree", "KNN"]
 
     sns.set_palette("rocket")
-    fig, ax = plt.subplots()
 
-    sns.barplot(x = xplot,y = yplot, ax=ax, alpha=0.9, label=x_label)
-    plt.xticks(xplot, x_label, rotation=60)
-    plt.ylabel("Recall Score")
+    plt.figure(figsize = [14, 9])
+    sns.barplot(x = xplot,y = yplot, alpha=0.9, label=x_label)
+    plt.xticks(xplot, x_label, rotation=60, fontsize=18)
+    plt.ylabel("Recall Score", fontsize=18)
 
     for x_pos, y_pos in zip(xplot,yplot):
-        ax.text(x_pos-0.1, y_pos - 0.1, str(round(y_pos,3)), color="white")
+        plt.text(x_pos-0.1, y_pos - 0.1, str(round(y_pos,3)), color="white")
 
-    plt.title("Recall Scores by Model", size=14)
-    fig.tight_layout()
+    plt.title("Recall Scores by Model", fontsize=20)
+    plt.tight_layout()
     plt.savefig("Images/recall_score_model.png")
     return plt.show()
 
 
 def confusion_matrix_viz(test, predict):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize = [14,9])
     sns.heatmap(confusion_matrix(test, predict),
                 annot = True,
                 ax = ax,
                 fmt = 'd')
     ax.set_ylim([0,2])
     ax.set_yticks([0.75, 1.75])
-    ax.set_title('Confusion Matrix')
-    ax.set_xlabel('Predicted')
-    ax.set_ylabel('True')
-    ax.yaxis.set_ticklabels(['No Wildfire', 'Wildfire'])
-    ax.xaxis.set_ticklabels(['No Wildfire', 'Wildfire'])
+    ax.set_title('Confusion Matrix', fontsize = 20)
+    ax.set_xlabel('Predicted', fontsize = 18)
+    ax.set_ylabel('True', fontsize = 18)
+    ax.yaxis.set_ticklabels(['No Wildfire', 'Wildfire'], fontsize = 18)
+    ax.xaxis.set_ticklabels(['No Wildfire', 'Wildfire'], fontsize = 18)
     fig.savefig('images/confmatrix.png', bbox_inches='tight')
+
+
+def population_data(pop_data, area_data):
+    '''
+    
+    Inputs two dataframes and returns a dataframe with Counties population, area, and population density
+    
+    '''
+    # We only want the data from 2013-2018
+    pop_df = pop_data.loc[pop_data['Year'] > 2012]
+    # Rename columns for ease of combining with final dataframe
+    pop_df.rename(columns = {'County':'county', 'Year':'year'}, inplace = True)
+    # Take the county and square miles columns in a new dataframe
+    area_df = area_data[['County', 'Square Miles']]
+    # Rename the County column for ease of combining with final dataframe
+    area_df.rename(columns = {'County':'county'}, inplace = True)
+    # Merge the dataframes into one
+    pop_area_df = pd.merge(pop_df, area_df, how = 'left', left_on = ['county'], right_on = ['county'])
+    # Rename area to new units
+    pop_area_df.rename(columns = {'Square Miles':'county_acres'}, inplace = True)
+    # Convert units to acres to match units in final dataframe
+    pop_area_df.county_acres = pop_area_df.county_acres * 640
+    # Create a new column pop_density using the population and area
+    pop_area_df['pop_density'] = pop_area_df.Population / pop_area_df.county_acres
+    # Return the dataframe
+    return pop_area_df
 
 

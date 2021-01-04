@@ -53,6 +53,8 @@ The Weather Data was gathered from the California Irrigation Management Informat
 
 For each of the features, the previous week's and previous month's averages were created for the final data set.
 
+Another factor that influences the likelihood of a wildfire occuring is the human population. Many wildfires are due to humans; some of the most common causes are burning debris, unattended camp fires and eletrical lines ([Frontline Wildfire](https://www.frontlinewildfire.com/what-causes-wildfires/)). The data on population and area of the counties was gathered from The California State Association of Counties ([CSAC](https://www.counties.org/data-and-research)).
+
 ## Exploratory Data Analysis
 
 We first check to see the number of weeks that have wildfires started and those that don't.
@@ -85,7 +87,7 @@ There are certain counties that are more likely to have more wildfires than othe
 
 ## Model Evaluation
 
-We tried several model: a logistic regression model, a K Nearest Neighbor (KNN) model, a Decision Tree classifier, and a Random Forest Classifier. To validate the models, we used cross validation using `cross_val_scores` with the logistic regression model and the knn model. The Decision Tree classifier and the Random Forest classifier had parameters tuned and validated using GridSearchCV.
+We tried several model: a logistic regression model, a K Nearest Neighbor (KNN) model, a Decision Tree classifier, and a Random Forest Classifier. To validate the models, we used cross validation using `cross_val_scores` with the logistic regression model and the knn model. The Decision Tree classifier, Random Forest classifier, Adaboost, GradientBoosting, and XGBoost Classifier had parameters tuned and validated using GridSearchCV.
 
 The best model is the logistic regression. While all the models had very close recall scores, the logistic regression model was slightly higher with a score of ~80%.
 
@@ -98,17 +100,18 @@ From the confusion matrix, we can see that while the number of false negatives w
 
 ## Conclusion
 
-With a recall score of nearly 80%, it means that this model should not be used on its own. While the model does well at catching which observations will result in wildfires, the model should ideally have a higher score. A possible reason for the false negatives could be from missing connections. A large number of wildfires are caused by humans, which is something that is unaccounted for in this model. The large number of false positives could be from missing connections or it might be due to the nature of CalFire Wildfire Incidents only record wildfires that burn more than 10 acres. A portion of the false positives could be from wildfires that burned close to 10 acres but did not reach the cutoff.
+With a recall score of over 80%, it means that this model for every 5 observations that result in a wilfire starting, it incorrectly predicts one of those observations as a week with no wildfires. While the model does well at catching which observations will result in wildfires, the model should ideally have a higher recall score. A possible reason for the false negatives could be from missing connections. One of the most common causes for wildfires are electrical lines. This model has not taken into account how eletrical lines might increase the chance of wildfires. The large number of false positives could also be from missing connections or it might be due to the nature of CalFire Wildfire Incidents that only record wildfires that burn more than 10 acres. A portion of the false positives could be from wildfires that burned close to 10 acres but did not reach the cutoff.
+
+This model can be used at the start of each week, so that groups like CalFire can allocate both funds and personnel to higher risk counties in preparation of Red Flags or Fire Watch Warnings. With wildfires only greater than 10 acres recorded, this will give government groups and citizens of counties more information and awareness about the possibility of a larger wildfire. From there groups like Calfire can be more prepared to contain the wildfires and citizens can prep for possible evacuations.
 
 ## Future Steps
 
 Possible future improvements to this project are: 
 
-    - More feature engineering
-    - Gathering human relevant data such as population or population density
-    - New models such as XG Boost and Neural Nets
+    - More feature engineering. After gathering easily accesible revelant data, finding different connections or creating new features from other columns could increase the accuracy even more.
+    - Gathering more human relevant data such as age of electrical grid and industries. Some of the more common causes of wildfires are from electrical lines causing sparks or from industrial factories causing the sparks.
     
-Further study could model the probability of fire sizes using the number of acres burned.
+Further study could model the classification of fire sizes using the number of acres burned. As of now, the model predicts which weeks a county will have a wildfire incident, while classifying the wildfires by their size, would give CalFire and other groups even more information about how big certain fires will be.
 
 ## Sources
 
